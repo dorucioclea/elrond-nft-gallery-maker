@@ -1,19 +1,23 @@
-import React from 'react'
+import { useMemo } from 'react'
 import html2canvas from 'html2canvas';
 
 import './Gallery.css'
 
-import wedding from '../../assets/wedding.jpg'
-import rocks from '../../assets/rocks.jpg'
-import falls2 from '../../assets/falls2.jpg'
-import paris from '../../assets/paris.jpg'
-import nature from '../../assets/nature.jpg'
-import mist from '../../assets/mist.jpg'
-import underwater from '../../assets/underwater.jpg'
-import ocean from '../../assets/ocean.jpg'
-import mountainskies from '../../assets/mountainskies.jpg'
+import { useMachine } from '@xstate/react';
+import { createGalleryMachine } from './GalleryMachine';
 
-export default function Gallery() {
+interface GalleryProps {
+    address: string
+}
+
+export default function Gallery({ address }: GalleryProps) {
+
+    const galleryMachine =  useMemo(() => {
+        return createGalleryMachine(address)
+    }, [address]) 
+
+    const [current, send] = useMachine(galleryMachine)
+    const { collection } = current.context
  
     function captureScreenShot():void {
         const gallery = document.getElementById('gallery')
@@ -41,42 +45,21 @@ export default function Gallery() {
     return (
         <div >
             <div id="gallery" className="gallery-area">
-                <div className="row">
-                    <div className="column">
-                        <img src={wedding} />
-                        <img src={rocks} />
-                        <img src={falls2} />
-                        <img src={paris} />
-                        <img src={nature} />
-                        <img src={mist} />
-                        <img src={paris} />
-                    </div>
-                        <div className="column">
-                        <img src={underwater} />
-                        <img src={ocean} />
-                        <img src={wedding} />
-                        <img src={mountainskies} />
-                        <img src={rocks} />
-                        <img src={underwater} />
-                    </div>
-                    <div className="column">
-                        <img src={wedding} />
-                        <img src={rocks} />
-                        <img src={falls2} />
-                        <img src={paris} />
-                        <img src={nature} />
-                        <img src={mist} />
-                        <img src={paris} />
-                    </div>
-                        <div className="column" >
-                        <img src={underwater} />
-                        <img src={ocean} />
-                        <img src={wedding} />
-                        <img src={mountainskies} />
-                        <img src={rocks} />
-                        <img src={underwater} />
-                    </div>
-                </div>
+                <ul>
+                    {
+                        collection && collection.size > 0 && Array.from(collection.entries()).map((entry) => {
+                            const nfts = entry[1];
+                            return nfts.map((nft) => {
+                                const url = nft.url//nft.uris && nft.uris.length > 0 ? atob(nft.uris[0]) : nft.url
+                                return (
+                                    <li key={nft.identifier}>
+                                        <img src={url} alt=''></img>
+                                    </li>
+                                )
+                            })
+                        })
+                    }
+                </ul>
             </div>
             <button onClick={captureScreenShot}>Capture</button>
         </div>
