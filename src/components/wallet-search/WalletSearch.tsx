@@ -1,37 +1,22 @@
-import React, { useState } from 'react'
-import { ElrondNft } from '../../types/ElrondNft'
+import { useContext, useRef } from 'react'
+import { MachineProvider } from '../../App';
 
 export default function WalletSearch() {
 
-    const [walletAddress, setWalletAddress] = useState('')
-    const [nfts, setNfts] = useState<ElrondNft[]>([])
+    const globalMachine = useContext(MachineProvider);
+    const { send } = globalMachine.mainService
 
-    function walletInputUpdate(event: React.ChangeEvent<HTMLInputElement>) {
-        setWalletAddress(event.target.value)
-    }
+    const addressRef = useRef<HTMLInputElement>(null)
 
-    async function search() {
-        const response = await fetch(`https://api.elrond.com/accounts/${walletAddress}/nfts`) 
-        let tempNfts:ElrondNft[] = await response.json()
-        tempNfts = tempNfts.filter((nft: ElrondNft) => !nft.collection.includes('LKFARM'))
-        setNfts(tempNfts)
-        const collection: Map<string, ElrondNft[]> = new Map();
-        tempNfts.forEach((nft:ElrondNft) => {
-            if(collection.has(nft.collection)) {
-                collection.get(nft.collection)?.push(nft)
-            }
-            else {
-                const col = []
-                col.push(nft)
-                collection.set(nft.collection, col)
-            }
-        });
+    function sendSearchEvent() {
+        if(addressRef.current)
+            send({type: 'SELECT', walletValue: addressRef.current.value})
     }
 
     return (
         <div className="wallet-info">
-          <input type="text" value={walletAddress} onChange={walletInputUpdate}/>
-          <button onClick={search}>search</button>
+          <input type="text" ref={addressRef} />
+          <button onClick={sendSearchEvent}>search</button>
         </div>        
     )
 }
